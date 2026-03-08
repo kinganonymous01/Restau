@@ -1,6 +1,5 @@
 import express from 'express';
-import pg from 'pg';
-const { Pool } = pg;
+import { neon } from '@neondatabase/serverless';
 import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 
@@ -13,14 +12,12 @@ app.use(express.json());
 // Neon DB connection
 const NEON_URI = "postgresql://neondb_owner:npg_X1GBiumy9Ttv@ep-calm-sea-a14uos77-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
-const pool = new Pool({
-  connectionString: NEON_URI,
-});
+const sql = neon(NEON_URI);
 
 // Initialize database table
 async function initDB() {
   try {
-    await pool.query(`
+    await sql`
       CREATE TABLE IF NOT EXISTS dishes (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -28,7 +25,7 @@ async function initDB() {
         price DOUBLE PRECISION NOT NULL,
         category VARCHAR(100) NOT NULL
       );
-    `);
+    `;
     console.log('Connected to Neon DB and verified dishes table');
   } catch (err) {
     console.error('Neon DB connection/initialization error:', err);
@@ -39,8 +36,8 @@ initDB();
 // API Routes
 app.get('/api/menu', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM dishes ORDER BY id ASC');
-    res.json(result.rows);
+    const rows = await sql`SELECT * FROM dishes ORDER BY id ASC`;
+    res.json(rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch menu' });
@@ -50,11 +47,12 @@ app.get('/api/menu', async (req, res) => {
 app.post('/api/menu', async (req, res) => {
   try {
     const { name, description, price, category } = req.body;
-    const result = await pool.query(
-      'INSERT INTO dishes (name, description, price, category) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, description, price, category]
-    );
-    res.status(201).json(result.rows[0]);
+    const rows = await sql`
+      INSERT INTO dishes (name, description, price, category) 
+      VALUES (${name}, ${description}, ${price}, ${category}) 
+      RETURNING *
+    `;
+    res.status(201).json(rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to add dish' });
@@ -64,7 +62,7 @@ app.post('/api/menu', async (req, res) => {
 app.delete('/api/menu/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query('DELETE FROM dishes WHERE id = $1', [id]);
+    await sql`DELETE FROM dishes WHERE id = ${id}`;
     res.status(204).send();
   } catch (err) {
     console.error(err);
