@@ -107,7 +107,12 @@ export default function App() {
             <div className="bg-emerald-500 p-2 rounded-lg text-stone-950">
               <Utensils size={20} />
             </div>
-            <h1 className="text-xl font-semibold tracking-tight text-white">Restaurant Menu Manager</h1>
+            <h1 className="text-xl font-semibold tracking-tight text-white flex items-center gap-3">
+              Restaurant Menu Manager
+              <span className="text-xs font-medium text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
+                Neon Version
+              </span>
+            </h1>
           </div>
         </div>
       </header>
