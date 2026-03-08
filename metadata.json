@@ -1,0 +1,5 @@
+{
+  "name": "Restaurant Menu Manager",
+  "description": "A simple MERN stack app to manage a restaurant menu using MongoDB Atlas.",
+  "requestFramePermissions": []
+}
