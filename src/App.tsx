@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PlusCircle, Trash2, Utensils, AlertCircle } from 'lucide-react';
 
 interface Dish {
-  _id: string;
+  id: number;
   name: string;
   description: string;
   price: number;
@@ -80,7 +80,7 @@ export default function App() {
     }
   };
 
-  const handleDeleteDish = async (id: string) => {
+  const handleDeleteDish = async (id: number) => {
     try {
       const response = await fetch(`/api/menu/${id}`, {
         method: 'DELETE',
@@ -91,7 +91,7 @@ export default function App() {
         throw new Error(data.error || 'Failed to delete dish');
       }
 
-      setMenu(menu.filter(dish => dish._id !== id));
+      setMenu(menu.filter(dish => dish.id !== id));
       setError(null);
     } catch (err: any) {
       setError(err.message);
@@ -218,15 +218,15 @@ export default function App() {
                       <h2 className="text-xl font-semibold mb-4 pb-2 border-b border-stone-800 text-white">{cat}</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {categoryDishes.map(dish => (
-                          <div key={dish._id} className="bg-stone-900 p-5 rounded-xl border border-stone-800 shadow-sm hover:border-stone-700 transition-colors relative group">
+                          <div key={dish.id} className="bg-stone-900 p-5 rounded-xl border border-stone-800 shadow-sm hover:border-stone-700 transition-colors relative group">
                             <div className="flex justify-between items-start mb-2">
                               <h3 className="font-medium text-lg pr-8 text-white">{dish.name}</h3>
-                              <span className="font-semibold text-emerald-400">${dish.price.toFixed(2)}</span>
+                              <span className="font-semibold text-emerald-400">${Number(dish.price).toFixed(2)}</span>
                             </div>
                             <p className="text-stone-400 text-sm leading-relaxed">{dish.description}</p>
                             
                             <button
-                              onClick={() => handleDeleteDish(dish._id)}
+                              onClick={() => handleDeleteDish(dish.id)}
                               className="absolute top-4 right-4 p-1.5 text-stone-500 hover:text-red-400 hover:bg-red-950/50 rounded-md opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
                               aria-label="Delete dish"
                             >

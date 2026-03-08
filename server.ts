@@ -1,5 +1,6 @@
 import express from 'express';
-import mongoose from 'mongoose';
+import pg from 'pg';
+const { Pool } = pg;
 import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 
@@ -9,29 +10,39 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection
-const MONGODB_URI = "mongodb+srv://Raj:qwerty1234@cluster0.c9fiw0n.mongodb.net/restaurant?appName=Cluster0";
+// Neon DB connection
+const NEON_URI = "postgresql://neondb_owner:npg_X1GBiumy9Ttv@ep-calm-sea-a14uos77-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch(err => console.error('MongoDB connection error:', err));
-
-// Define Mongoose Schema and Model
-const dishSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  description: { type: String, required: true },
-  price: { type: Number, required: true },
-  category: { type: String, required: true },
+const pool = new Pool({
+  connectionString: NEON_URI,
 });
 
-const Dish = mongoose.model('Dish', dishSchema);
+// Initialize database table
+async function initDB() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS dishes (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL,
+        price DOUBLE PRECISION NOT NULL,
+        category VARCHAR(100) NOT NULL
+      );
+    `);
+    console.log('Connected to Neon DB and verified dishes table');
+  } catch (err) {
+    console.error('Neon DB connection/initialization error:', err);
+  }
+}
+initDB();
 
 // API Routes
 app.get('/api/menu', async (req, res) => {
   try {
-    const menu = await Dish.find();
-    res.json(menu);
+    const result = await pool.query('SELECT * FROM dishes ORDER BY id ASC');
+    res.json(result.rows);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to fetch menu' });
   }
 });
@@ -39,19 +50,24 @@ app.get('/api/menu', async (req, res) => {
 app.post('/api/menu', async (req, res) => {
   try {
     const { name, description, price, category } = req.body;
-    const newDish = new Dish({ name, description, price, category });
-    await newDish.save();
-    res.status(201).json(newDish);
+    const result = await pool.query(
+      'INSERT INTO dishes (name, description, price, category) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, description, price, category]
+    );
+    res.status(201).json(result.rows[0]);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to add dish' });
   }
 });
 
 app.delete('/api/menu/:id', async (req, res) => {
   try {
-    await Dish.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    await pool.query('DELETE FROM dishes WHERE id = $1', [id]);
     res.status(204).send();
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to delete dish' });
   }
 });
