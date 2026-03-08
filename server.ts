@@ -10,15 +10,11 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = 'mongodb+srv://Raj:qwerty1234@cluster0.c9fiw0n.mongodb.net/?appName=Cluster0';
 
-if (MONGODB_URI) {
-  mongoose.connect(MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB Atlas'))
-    .catch(err => console.error('MongoDB connection error:', err));
-} else {
-  console.warn('MONGODB_URI environment variable is not set. Database features will not work.');
-}
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB Atlas'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // Define Mongoose Schema and Model
 const dishSchema = new mongoose.Schema({
@@ -33,9 +29,6 @@ const Dish = mongoose.model('Dish', dishSchema);
 // API Routes
 app.get('/api/menu', async (req, res) => {
   try {
-    if (!MONGODB_URI) {
-      return res.status(503).json({ error: 'Database not configured. Please set MONGODB_URI.' });
-    }
     const menu = await Dish.find();
     res.json(menu);
   } catch (err) {
@@ -45,9 +38,6 @@ app.get('/api/menu', async (req, res) => {
 
 app.post('/api/menu', async (req, res) => {
   try {
-    if (!MONGODB_URI) {
-      return res.status(503).json({ error: 'Database not configured. Please set MONGODB_URI.' });
-    }
     const { name, description, price, category } = req.body;
     const newDish = new Dish({ name, description, price, category });
     await newDish.save();
@@ -59,9 +49,6 @@ app.post('/api/menu', async (req, res) => {
 
 app.delete('/api/menu/:id', async (req, res) => {
   try {
-    if (!MONGODB_URI) {
-      return res.status(503).json({ error: 'Database not configured. Please set MONGODB_URI.' });
-    }
     await Dish.findByIdAndDelete(req.params.id);
     res.status(204).send();
   } catch (err) {
