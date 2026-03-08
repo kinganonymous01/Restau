@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB connection
-const MONGODB_URI = 'mongodb+srv://Raj:qwerty1234@cluster0.c9fiw0n.mongodb.net/?appName=Cluster0';
+const MONGODB_URI = "mongodb+srv://Raj:qwerty1234@cluster0.c9fiw0n.mongodb.net/restaurant?appName=Cluster0";
 
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('Connected to MongoDB Atlas'))
